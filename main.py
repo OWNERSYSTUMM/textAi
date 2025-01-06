@@ -1,3 +1,5 @@
+import os 
+from gtts import gTTS
 from pyrogram import Client, filters
 from pyrogram.enums import ChatAction, ParseMode
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -75,6 +77,39 @@ async def handle_private_query(client, message):
 
     # Reply to the user
     await message.reply_text(reply)
+
+
+@app.on_message(filters.command("tts"))
+async def text_to_speech(client, message):
+    # Extract text from the command or the replied message
+    text = None
+
+    if len(message.command) > 1:
+        # If the command has additional text, use it
+        text = message.text.split(' ', 1)[1]
+    elif message.reply_to_message and message.reply_to_message.text:
+        # If replying to a message with text, use that text
+        text = message.reply_to_message.text
+
+    if not text:
+        await message.reply_text("Usage: `/tts4 <text>` or reply to a text message with `/tts4`.")
+        return
+
+    try:
+        # Generate TTS audio
+        tts = gTTS(text=text, lang='pa')
+        audio_file = 'MedicalAi_audio.mp3'
+        tts.save(audio_file)
+        
+        # Send the audio file
+        await message.reply_audio(audio_file)
+    except Exception as e:
+        # Handle errors
+        await message.reply_text(f"An error occurred: {str(e)}")
+    finally:
+        # Clean up the saved audio file
+        if os.path.exists(audio_file):
+            os.remove(audio_file)
 
 if __name__ == "__main__":
     print("Bot is running...")
