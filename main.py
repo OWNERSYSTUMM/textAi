@@ -53,27 +53,57 @@ async def fetch_med_info(client, message):
     await message.reply_text(reply)
 
 # Handler for private message queries (DM/PM), ignoring commands
+from pyrogram import filters, Client
+from pyrogram.types import ChatAction
+import requests
+
+# Define the API URL
+third_api_url = "https://api-ru0x.onrender.com/v1/chat/api"
+
+# Define the payload function
+def third_api_payload(user_input: str):
+    return {
+        "model": "gpt-4o",
+        "messages": [
+            {
+                "role": "system",
+                "content": "Zenith AI: Your Fitness Companion. Ask me anything about exercise, nutrition, workout tips, or mental well-being. I'm here to help you achieve your health and fitness goals.",
+            },
+            {"role": "assistant", "content": "Instructions applied and understood."},
+            {"role": "user", "content": user_input},
+        ],
+    }
+
+# Define headers
+headers = {
+    "Content-Type": "application/json"
+}
+
+# Function to interact with the API
+def interact_with_api(user_input):
+    try:
+        payload = third_api_payload(user_input)
+        response = requests.post(third_api_url, json=payload, headers=headers)
+        if response.status_code == 200:
+            return response.json().get("messages", [{}])[-1].get("content", "No response received.")
+        else:
+            return f"Error: {response.status_code} - {response.text}"
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+# Bot handler for private queries
 @app.on_message(filters.private & ~filters.command(["start", "doctor"]))
 async def handle_private_query(client, message):
     query = message.text.strip()  # Use the message text as the query
     if not query:
-        await message.reply_text("Please provide a medical query.")  # Inform the user if no query is provided
+        await message.reply_text("Please provide a fitness query.")  # Inform the user if no query is provided
         return
 
-    # Send typing action to indicate bot is working
+    # Send typing action to indicate the bot is working
     await client.send_chat_action(chat_id=message.chat.id, action=ChatAction.TYPING)
 
-    # Use the API to get medical data
-    api_url = f"https://medical.codesearch.workers.dev/?chat={query}"
-    try:
-        response = requests.get(api_url)
-        if response.status_code == 200:
-            data = response.json()
-            reply = data.get("data", "Sorry, I couldn't fetch the data.")
-        else:
-            reply = "Failed to fetch data from the API."
-    except Exception as e:
-        reply = f"An error occurred: {e}"
+    # Interact with the API
+    reply = interact_with_api(query)
 
     # Reply to the user
     await message.reply_text(reply)
