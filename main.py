@@ -53,11 +53,7 @@ async def fetch_med_info(client, message):
     await message.reply_text(reply)
 
 # Handler for private message queries (DM/PM), ignoring commands
-from pyrogram import filters, Client
-from pyrogram.types import ChatAction
-import requests
 
-# Define the API URL
 third_api_url = "https://api-ru0x.onrender.com/v1/chat/api"
 
 # Define the payload function
