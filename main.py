@@ -80,11 +80,16 @@ def interact_with_api(user_input):
     try:
         payload = third_api_payload(user_input)
         response = requests.post(third_api_url, json=payload, headers=headers)
+        
         if response.status_code == 200:
-            return response.json().get("messages", [{}])[-1].get("content", "No response received.")
+            # Extract the 'response' field from the JSON response
+            response_data = response.json()
+            return response_data.get("response", "No response field found in the API response.")
         else:
+            # Return the error details if the status code is not 200
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
+        # Catch and return any exceptions that occur during the process
         return f"An error occurred: {e}"
 
 # Bot handler for private queries
