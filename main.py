@@ -56,20 +56,24 @@ async def fetch_med_info(client, message):
 
 third_api_url = "https://api-ru0x.onrender.com/v1/chat/api"
 
-# Define the payload function
+
 def third_api_payload(user_input: str):
     return {
         "model": "gpt-4o",
         "messages": [
             {
                 "role": "system",
-                "content": "Zenith AI: Your Fitness Companion. Ask me anything about exercise, nutrition, workout tips, or mental well-being. I'm here to help you achieve your health and fitness goals.",
+                "content": (
+                    "You are Zenith AI, a fitness assistant. You must only respond to queries about fitness, "
+                    "exercise, nutrition, workouts, and related topics. If the user asks anything outside the scope "
+                    "of fitness, respond with: 'I can only assist with fitness-related queries. Please ask me something "
+                    "about fitness, exercise, or nutrition.'"
+                ),
             },
             {"role": "assistant", "content": "Instructions applied and understood."},
             {"role": "user", "content": user_input},
         ],
     }
-
 # Define headers
 headers = {
     "Content-Type": "application/json"
