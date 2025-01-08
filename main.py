@@ -80,21 +80,40 @@ headers = {
 }
 
 # Function to interact with the API
-def interact_with_api(user_input):
-    try:
-        payload = third_api_payload(user_input)
-        response = requests.post(third_api_url, json=payload, headers=headers)
-        
-        if response.status_code == 200:
-            # Extract the 'response' field from the JSON response
-            response_data = response.json()
-            return response_data.get("response", "No response field found in the API response.")
-        else:
-            # Return the error details if the status code is not 200
-            return f"Error: {response.status_code} - {response.text}"
-    except Exception as e:
-        # Catch and return any exceptions that occur during the process
-        return f"An error occurred: {e}"
+import requests
+import time
+
+def interact_with_api(user_input, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            payload = third_api_payload(user_input)
+            response = requests.post(third_api_url, json=payload, headers=headers)
+
+            if response.status_code == 200:
+                response_data = response.json()
+
+                
+                if response_data.get("response") in ["Model not found", "Too long input"] or "error" in response_data:
+                    print(f"Attempt {attempt + 1}: Error in response - {response_data.get('response', 'Unknown error')}")
+                    time.sleep(1)  
+                    continue
+                
+
+                return response_data.get("response", "No response field found in the API response.")
+            else:
+                print(f"Attempt {attempt + 1}: Error - HTTP {response.status_code}: {response.text}")
+                time.sleep(2)  
+                continue
+
+        except Exception as e:
+            print(f"Attempt {attempt + 1}: Exception occurred - {e}")
+            time.sleep(2)  
+            continue
+
+
+    return "Failed to fetch a valid response after multiple attempts."
+
+
 
 # Bot handler for private queries
 @app.on_message(filters.private & ~filters.command(["start", "doctor"]))
